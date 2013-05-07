@@ -62,7 +62,7 @@ namespace TiviT.NCloak.Mapping
         public void AddMethodMapping(MethodReference method, string obfuscatedMethodName)
         {
             if (method == null) throw new ArgumentNullException("method");
-            string methodName = method.Name;
+			string methodName = GetMethodKey(method);
             if (!methods.ContainsKey(methodName))
             {
                 methods.Add(methodName, new MemberMapping(methodName, obfuscatedMethodName));
@@ -112,7 +112,7 @@ namespace TiviT.NCloak.Mapping
         public bool HasMethodMapping(MethodReference method)
         {
             if (method == null) throw new ArgumentNullException("method");
-            string methodName = method.Name;
+			string methodName = GetMethodKey(method);
             return methods.ContainsKey(methodName);
         }
 
@@ -154,7 +154,7 @@ namespace TiviT.NCloak.Mapping
             if (method == null) throw new ArgumentNullException("method");
             if (HasMethodMapping(method))
             {
-                string methodName = method.Name;
+                string methodName = GetMethodKey(method);
                 return methods[methodName].ObfuscatedMemberName;
             }
             return null;
@@ -227,5 +227,10 @@ namespace TiviT.NCloak.Mapping
         {
             return obfuscatedFields.ContainsKey(obfuscatedFieldName);
         }
+
+		static string GetMethodKey(MethodReference method)
+		{
+			return method.ToString();
+		}
     }
 }
