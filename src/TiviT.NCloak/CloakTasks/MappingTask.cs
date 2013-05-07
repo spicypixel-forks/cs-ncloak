@@ -243,6 +243,11 @@ namespace TiviT.NCloak.CloakTasks
             {
                 //Convert to a type definition
                 TypeDefinition td = tr.GetTypeDefinition();
+				if(td == null) {
+					// Skip types not found
+					continue;
+				}
+
                 MethodDefinition md = td.Methods.FindMethod(method.Name, method.Parameters);
                 if (md != null)
                     return td;
@@ -288,6 +293,11 @@ namespace TiviT.NCloak.CloakTasks
             {
                 //Convert to a type definition
                 TypeDefinition td = tr.GetTypeDefinition();
+				if(td == null) {
+					// Skip types not found
+					continue;
+				}
+
                 if (td.Properties.HasProperty(property.Name))
                     return td; 
 
