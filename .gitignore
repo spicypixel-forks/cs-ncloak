@@ -1,0 +1,7 @@
+src/Tests/TiviT.NCloak.Tests/bin
+src/TiviT.NCloak.Console/bin
+src/TiviT.NCloak/bin
+src/samples/HackableProgram/bin
+src/samples/SimpleLibrary/bin
+src/samples/SimpleProgram/bin
+Resources.resources
