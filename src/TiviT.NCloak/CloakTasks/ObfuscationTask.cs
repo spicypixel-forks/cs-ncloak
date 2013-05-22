@@ -157,44 +157,49 @@ namespace TiviT.NCloak.CloakTasks
         {
             //Get the type reference for this
             TypeReference methodType = memberReference.DeclaringType;
-            //Get the assembly for this
-            if (methodType.Scope is AssemblyNameReference)
+
+			string assemblyName;
+			if (methodType.Scope is ModuleDefinition)
+				assemblyName = ((ModuleDefinition)methodType.Scope).Assembly.Name.FullName;
+			else if (methodType.Scope is AssemblyNameReference)
+				assemblyName = ((AssemblyNameReference)methodType.Scope).FullName;
+			else
+				return;
+
+            //Check if this needs to be updated
+            if (context.MappingGraph.IsAssemblyMappingDefined(assemblyName))
             {
-                string assemblyName = ((AssemblyNameReference) methodType.Scope).FullName;
-                //Check if this needs to be updated
-                if (context.MappingGraph.IsAssemblyMappingDefined(assemblyName))
+                AssemblyMapping assemblyMapping = context.MappingGraph.GetAssemblyMapping(assemblyName);
+                TypeMapping t = assemblyMapping.GetTypeMapping(methodType);
+                if (t == null)
+                    return; //No type defined
+
+                //Update the type name
+                if (!String.IsNullOrEmpty(t.ObfuscatedTypeName))
+                    methodType.Name = t.ObfuscatedTypeName;
+
+                //We can't change method specifications....
+                if (memberReference is MethodSpecification)
                 {
-                    AssemblyMapping assemblyMapping = context.MappingGraph.GetAssemblyMapping(assemblyName);
-                    TypeMapping t = assemblyMapping.GetTypeMapping(methodType);
-                    if (t == null)
-                        return; //No type defined
+                    MethodSpecification specification = (MethodSpecification)memberReference;
+                    MethodReference meth = specification.GetElementMethod();
 
-                    //Update the type name
-                    if (!String.IsNullOrEmpty(t.ObfuscatedTypeName))
-                        methodType.Name = t.ObfuscatedTypeName;
-
-                    //We can't change method specifications....
-                    if (memberReference is MethodSpecification)
-                    {
-                        MethodSpecification specification = (MethodSpecification)memberReference;
-                        MethodReference meth = specification.GetElementMethod();
-                        //Update the method name also if available
-                        if (t.HasMethodMapping(meth))
-                            meth.Name = t.GetObfuscatedMethodName(meth);
-                    }
-                    else if (memberReference is FieldReference)
-                    {
-                        FieldReference fr = (FieldReference) memberReference;
-                        if (t.HasFieldMapping(fr))
-                            memberReference.Name = t.GetObfuscatedFieldName(fr);
-                    }
-                    else if (memberReference is MethodReference) //Is this ever used?? Used to be just an else without if
-                    {
-                        MethodReference mr = (MethodReference) memberReference;
-                        //Update the method name also if available
-                        if (t.HasMethodMapping(mr))
-                            memberReference.Name = t.GetObfuscatedMethodName(mr);
-                    }
+                    //Update the method name also if available
+                    if (t.HasMethodMapping(meth))
+                        meth.Name = t.GetObfuscatedMethodName(meth);
+                }
+                else if (memberReference is FieldReference)
+                {
+                    FieldReference fr = (FieldReference) memberReference;
+                    if (t.HasFieldMapping(fr))
+                        memberReference.Name = t.GetObfuscatedFieldName(fr);
+                }
+                else if (memberReference is MethodReference) //Is this ever used?? Used to be just an else without if
+                {
+                    MethodReference mr = (MethodReference) memberReference;
+                    //Update the method name also if available
+                    if (t.HasMethodMapping(mr))
+                        memberReference.Name = t.GetObfuscatedMethodName(mr);
                 }
             }
         }

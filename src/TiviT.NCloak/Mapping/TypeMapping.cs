@@ -245,13 +245,7 @@ namespace TiviT.NCloak.Mapping
 
 			var key = builder.ToString();
 
-			if (method.Name.Contains("MarshalArray")) {
-				Console.Out.WriteLine("methodkey:" + key);
-				Console.Out.WriteLine(System.Environment.StackTrace);
-			}
-
 			return key;
-			//return method.ToString();
 		}
 
 		public static void MethodSignatureFullName(IMethodSignature self, StringBuilder builder)

@@ -57,7 +57,7 @@ namespace TiviT.NCloak.CloakTasks
                 //Go through each type
                 foreach (TypeDefinition typeDefinition in moduleDefinition.GetAllTypes())
                 {
-					//Generics types are causing problems
+					//Generic types are causing problems
 					//Some members don't resolve
 					if (typeDefinition.HasGenericParameters)
 						continue;
@@ -85,7 +85,7 @@ namespace TiviT.NCloak.CloakTasks
                         if (methodDefinition.IsConstructor)
                             continue;
 
-						//Generics types are causing problems
+						//Generic types are causing problems
 						//Some members don't resolve
 						if (methodDefinition.HasGenericParameters)
 							continue;

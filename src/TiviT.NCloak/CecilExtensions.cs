@@ -23,7 +23,7 @@ namespace TiviT.NCloak
         {
             if (typeReference == null)
                 return null;
-            foreach (TypeDefinition td in typeReference.Module.GetAllTypes())
+            foreach (TypeDefinition td in typeReference.Module.Types)
                 if (td.FullName == typeReference.FullName)
                     return td;
             return null;
