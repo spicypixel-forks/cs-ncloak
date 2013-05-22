@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Mono.Cecil;
+using System.Text;
 
 namespace TiviT.NCloak.Mapping
 {
@@ -228,9 +229,54 @@ namespace TiviT.NCloak.Mapping
             return obfuscatedFields.ContainsKey(obfuscatedFieldName);
         }
 
+		// Use a custom unique key
 		static string GetMethodKey(MethodReference method)
 		{
-			return method.ToString();
+			StringBuilder builder = new StringBuilder();
+			builder.Append(method.DeclaringType.FullName);
+			builder.Append("::");
+			builder.Append(method.Name);
+			// For generic params, print the param count
+			if (method.HasGenericParameters) {
+				builder.Append("`");
+				builder.Append(method.GenericParameters.Count);
+			}
+			MethodSignatureFullName(method, builder);
+
+			var key = builder.ToString();
+
+			if (method.Name.Contains("MarshalArray")) {
+				Console.Out.WriteLine("methodkey:" + key);
+				Console.Out.WriteLine(System.Environment.StackTrace);
+			}
+
+			return key;
+			//return method.ToString();
 		}
+
+		public static void MethodSignatureFullName(IMethodSignature self, StringBuilder builder)
+		{
+			builder.Append("(");
+			if (self.HasParameters)
+			{
+				Mono.Collections.Generic.Collection<ParameterDefinition> parameters = self.Parameters;
+				for (int i = 0; i < parameters.Count; i++)
+				{
+					ParameterDefinition parameterDefinition = parameters[i];
+					if (i > 0)
+					{
+						builder.Append(",");
+					}
+					if (parameterDefinition.ParameterType.IsSentinel)
+					{
+						builder.Append("...,");
+					}
+					//FIXME: Replace generic param !!0 with T; probably not correct
+					builder.Append(parameterDefinition.ParameterType.FullName.Replace("!!0", "T"));
+				}
+			}
+			builder.Append(")");
+		}
+
     }
 }

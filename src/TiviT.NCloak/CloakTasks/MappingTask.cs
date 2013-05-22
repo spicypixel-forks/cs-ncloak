@@ -57,6 +57,11 @@ namespace TiviT.NCloak.CloakTasks
                 //Go through each type
                 foreach (TypeDefinition typeDefinition in moduleDefinition.GetAllTypes())
                 {
+					//Generics types are causing problems
+					//Some members don't resolve
+					if (typeDefinition.HasGenericParameters)
+						continue;
+
                     //First of all - see if we've declared it already - if so get the existing reference
                     TypeMapping typeMapping = assemblyMapping.GetTypeMapping(typeDefinition);
                     if (typeMapping == null)
@@ -79,6 +84,11 @@ namespace TiviT.NCloak.CloakTasks
                         //We won't do constructors - causes issues
                         if (methodDefinition.IsConstructor)
                             continue;
+
+						//Generics types are causing problems
+						//Some members don't resolve
+						if (methodDefinition.HasGenericParameters)
+							continue;
 
                         //We haven't - let's work out the obfuscated name
                         if (obfuscateAll)
