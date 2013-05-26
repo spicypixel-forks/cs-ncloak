@@ -71,6 +71,11 @@ namespace TiviT.NCloak.Console
                             settings.ObfuscateAllModifiers = true;
                             break;
 
+						case "internal":
+							//Apply full obfuscation to internal members
+							settings.ObfuscateInternalModifiers = true;
+							break;
+
                         case "norename":
                             //Used for debugging purposes
                             settings.NoRename = true;

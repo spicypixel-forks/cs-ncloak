@@ -53,12 +53,17 @@ namespace TiviT.NCloak.CloakTasks
                         if (typeMapping == null)
                             continue; //There is a problem....
                         //Rename if necessary
-                        if (!String.IsNullOrEmpty(typeMapping.ObfuscatedTypeName))
-                            typeDefinition.Name = typeMapping.ObfuscatedTypeName;
+						if (!String.IsNullOrEmpty(typeMapping.ObfuscatedTypeName))
+							typeDefinition.Name = typeMapping.ObfuscatedTypeName;
 
                         //Go through each method
                         foreach (MethodDefinition methodDefinition in typeDefinition.Methods)
                         {
+							// Don't process properties here
+							if (methodDefinition.IsSpecialName 
+							    && (methodDefinition.Name.Contains("get_") || methodDefinition.Name.Contains("set_")))
+							    continue;
+
                             //If this is an entry method then note it
                             //bool isEntry = false;
                             //if (definition.EntryPoint != null && definition.EntryPoint.Name == methodDefinition.Name)
@@ -159,9 +164,7 @@ namespace TiviT.NCloak.CloakTasks
             TypeReference methodType = memberReference.DeclaringType;
 
 			string assemblyName;
-			if (methodType.Scope is ModuleDefinition)
-				assemblyName = ((ModuleDefinition)methodType.Scope).Assembly.Name.FullName;
-			else if (methodType.Scope is AssemblyNameReference)
+			if (methodType.Scope is AssemblyNameReference)
 				assemblyName = ((AssemblyNameReference)methodType.Scope).FullName;
 			else
 				return;
@@ -211,22 +214,25 @@ namespace TiviT.NCloak.CloakTasks
         /// <param name="typeReference">The type reference.</param>
         private static void UpdateTypeReferences(ICloakContext context, TypeReference typeReference)
         {
-            //Get the assembly for this
-            if (typeReference.Scope is AssemblyNameReference)
-            {
-                string assemblyName = ((AssemblyNameReference)typeReference.Scope).FullName;
-                //Check if this needs to be updated
-                if (context.MappingGraph.IsAssemblyMappingDefined(assemblyName))
-                {
-                    AssemblyMapping assemblyMapping = context.MappingGraph.GetAssemblyMapping(assemblyName);
-                    TypeMapping t = assemblyMapping.GetTypeMapping(typeReference);
-                    if (t == null)
-                        return; //No type defined
+			string assemblyName;
+			if (typeReference.Scope is AssemblyNameReference)
+				assemblyName = ((AssemblyNameReference)typeReference.Scope).FullName;
+			else {
+				return;
+			}
 
-                    //Update the type name
+            //Check if this needs to be updated
+            if (context.MappingGraph.IsAssemblyMappingDefined(assemblyName))
+            {
+                AssemblyMapping assemblyMapping = context.MappingGraph.GetAssemblyMapping(assemblyName);
+                TypeMapping t = assemblyMapping.GetTypeMapping(typeReference);
+                if (t == null)
+                    return; //No type defined
+
+                //Update the type name
                     if (!String.IsNullOrEmpty(t.ObfuscatedTypeName))
-                        typeReference.Name = t.ObfuscatedTypeName;
-                }
+					typeReference.Name = t.ObfuscatedTypeName;
+				}
             }
         }
     }

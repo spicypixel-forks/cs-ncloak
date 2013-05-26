@@ -54,6 +54,19 @@ namespace TiviT.NCloak
             set;
         }
 
+		/// <summary>
+		/// Gets or sets a value indicating whether the obfuscator should obfuscate private and internal access modifiers as opposed
+		/// to just private access modifiers
+		/// </summary>
+		/// <value>
+		/// 	<c>true</c> to obfuscate all modifiers; otherwise, <c>false</c>.
+		/// </value>
+		public bool ObfuscateInternalModifiers 
+		{
+			get;
+			set;
+		}
+
         /// <summary>
         /// Gets or sets a value indicating whether the obfuscator should encrypt strings.
         /// </summary>

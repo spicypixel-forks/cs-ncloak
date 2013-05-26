@@ -233,8 +233,7 @@ namespace TiviT.NCloak.Mapping
 		static string GetMethodKey(MethodReference method)
 		{
 			StringBuilder builder = new StringBuilder();
-			builder.Append(method.DeclaringType.FullName);
-			builder.Append("::");
+			// Do not use TypeName because it may get obfuscated (and is not needed since the mapping is for a specific type)
 			builder.Append(method.Name);
 			// For generic params, print the param count
 			if (method.HasGenericParameters) {
@@ -265,8 +264,11 @@ namespace TiviT.NCloak.Mapping
 					{
 						builder.Append("...,");
 					}
-					//FIXME: Replace generic param !!0 with T; probably not correct
-					builder.Append(parameterDefinition.ParameterType.FullName.Replace("!!0", "T"));
+					// FIXME: Replace generic param !!0 with T; probably not correct
+					// builder.Append(parameterDefinition.ParameterType.FullName.Replace("!!0", "T"));
+					//
+					// Use param name instead of type to workaround generics type changes.
+					builder.Append(parameterDefinition.Name);
 				}
 			}
 			builder.Append(")");
