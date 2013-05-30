@@ -64,6 +64,16 @@ namespace TiviT.NCloak.CloakTasks
 							    && (methodDefinition.Name.Contains("get_") || methodDefinition.Name.Contains("set_")))
 							    continue;
 
+							// Process attributes
+							foreach (var customAttr in methodDefinition.CustomAttributes) {
+								foreach (var arg in customAttr.ConstructorArguments) {
+									if (arg.Type.Name == "Type") {
+										var typeRef = arg.Value as TypeReference;
+										UpdateTypeReferences(context, typeRef);
+									}
+								}
+							}
+
                             //If this is an entry method then note it
                             //bool isEntry = false;
                             //if (definition.EntryPoint != null && definition.EntryPoint.Name == methodDefinition.Name)
@@ -230,9 +240,8 @@ namespace TiviT.NCloak.CloakTasks
                     return; //No type defined
 
                 //Update the type name
-                    if (!String.IsNullOrEmpty(t.ObfuscatedTypeName))
+                if (!String.IsNullOrEmpty(t.ObfuscatedTypeName))
 					typeReference.Name = t.ObfuscatedTypeName;
-				}
             }
         }
     }
