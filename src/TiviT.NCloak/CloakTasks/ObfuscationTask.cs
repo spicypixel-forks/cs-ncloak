@@ -65,11 +65,17 @@ namespace TiviT.NCloak.CloakTasks
 							    continue;
 
 							// Process attributes
+							//
+							// For some reason, just iterating attributes here causes them to be updated later.
+							//
+							// If this is removed, then attributes like MonoPInvokeCallback() do not
+							// have the right type in the first constructor argument.
 							foreach (var customAttr in methodDefinition.CustomAttributes) {
 								foreach (var arg in customAttr.ConstructorArguments) {
 									if (arg.Type.Name == "Type") {
 										var typeRef = arg.Value as TypeReference;
-										UpdateTypeReferences(context, typeRef);
+										if (typeRef != null)
+											continue;
 									}
 								}
 							}
