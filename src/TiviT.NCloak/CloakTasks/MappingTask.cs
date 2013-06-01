@@ -511,8 +511,10 @@ namespace TiviT.NCloak.CloakTasks
 			//Search the interfaces first
 			foreach (TypeReference tr in definition.Interfaces)
 			{
-				//Convert to a type definition
-				TypeDefinition td = tr.GetTypeDefinition();
+				// Convert to a type definition by actually resolving
+				// the type. If we don't do a full resolve we cannot get module external
+				// types like IDisposable to inspect their methods like Dispose.
+				TypeDefinition td = tr.Resolve(); // tr.GetTypeDefinition();
 				if(td == null) {
 					// Skip types not found
 					continue;
