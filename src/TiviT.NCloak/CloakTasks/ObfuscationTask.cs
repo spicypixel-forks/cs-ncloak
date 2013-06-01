@@ -84,8 +84,14 @@ namespace TiviT.NCloak.CloakTasks
                             //bool isEntry = false;
                             //if (definition.EntryPoint != null && definition.EntryPoint.Name == methodDefinition.Name)
                             //    isEntry = true;
-                            if (typeMapping.HasMethodMapping(methodDefinition))
+                            if (typeMapping.HasMethodMapping(methodDefinition)) {
                                 methodDefinition.Name = typeMapping.GetObfuscatedMethodName(methodDefinition);
+
+								// Obfuscate parameter names
+								NameManager nameManager = new NameManager(context.Settings.UseAlphaCharacterSet);
+								foreach (var p in methodDefinition.Parameters)
+									p.Name = nameManager.GenerateName(NamingTable.Field);
+							}
 
                             //Dive into the method body
                             UpdateMethodReferences(context, methodDefinition);
