@@ -119,7 +119,6 @@ namespace TiviT.NCloak.CloakTasks
                             if (typeMapping.HasFieldMapping(fieldDefinition))
                                 fieldDefinition.Name = typeMapping.GetObfuscatedFieldName(fieldDefinition);
                         }
-
                     }
                 }
             }
@@ -185,6 +184,9 @@ namespace TiviT.NCloak.CloakTasks
             //Get the type reference for this
             TypeReference methodType = memberReference.DeclaringType;
 
+			// Only rewrite member type references with assembly name ref scope.
+			// Meaning, the referenced type is stored in an exernal module and therefore
+			// refs were not updated in this module when the type was renamed.
 			string assemblyName;
 			if (methodType.Scope is AssemblyNameReference)
 				assemblyName = ((AssemblyNameReference)methodType.Scope).FullName;
@@ -237,11 +239,14 @@ namespace TiviT.NCloak.CloakTasks
         private static void UpdateTypeReferences(ICloakContext context, TypeReference typeReference)
         {
 			string assemblyName;
-			if (typeReference.Scope is AssemblyNameReference)
+
+			// Only rewrite member type references with assembly name ref scope.
+			// Meaning, the referenced type is stored in an exernal module and therefore
+			// refs were not updated in this module when the type was renamed.
+			if (typeReference.Scope is AssemblyNameReference) // Type is external to the module
 				assemblyName = ((AssemblyNameReference)typeReference.Scope).FullName;
-			else {
+			else
 				return;
-			}
 
             //Check if this needs to be updated
             if (context.MappingGraph.IsAssemblyMappingDefined(assemblyName))
