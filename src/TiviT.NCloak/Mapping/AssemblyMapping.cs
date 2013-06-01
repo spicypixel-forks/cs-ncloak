@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System;
 using Mono.Cecil;
+using System.Text;
 
 namespace TiviT.NCloak.Mapping
 {
@@ -38,18 +39,19 @@ namespace TiviT.NCloak.Mapping
         /// <returns></returns>
         public TypeMapping AddType(TypeReference type, string obfuscatedTypeName)
         {
-            string typeName = type.Namespace + "." + type.Name;
-            //TODO Take into account namespaces
-            /*
-            if (obfuscatedTypeName != null)
-                obfuscatedTypeName = type.Namespace + "." + obfuscatedTypeName;
-             */
+			if (type == null)
+				throw new ArgumentNullException("type");
+
+			string typeName = GetTypeMappingName(type);
+
             TypeMapping typeMapping = new TypeMapping(typeName, obfuscatedTypeName);
             typeMappingTable.Add(typeName, typeMapping);
-            //Add a reverse mapping
+            
+			// Add a reverse mapping
             if (!String.IsNullOrEmpty(obfuscatedTypeName))
-                obfuscatedToOriginalMapping.Add(type.Namespace + "." + obfuscatedTypeName, typeName);
-            return typeMapping;
+				obfuscatedToOriginalMapping.Add(obfuscatedTypeName, typeName);
+            
+			return typeMapping;
         }
 
         /// <summary>
@@ -59,20 +61,33 @@ namespace TiviT.NCloak.Mapping
         /// <returns></returns>
         public TypeMapping GetTypeMapping(TypeReference type)
         {
-            if (type == null)
-                return null;
-            string typeName = type.Namespace + "." + type.Name;
-            if (typeMappingTable.ContainsKey(typeName))
-                return typeMappingTable[typeName];
+			if (type == null)
+				throw new ArgumentNullException("type");
 
-            //Check the reverse mapping table
-            if (obfuscatedToOriginalMapping.ContainsKey(typeName))
-            {
-                string originalTypeName = obfuscatedToOriginalMapping[typeName];
-                if (typeMappingTable.ContainsKey(originalTypeName))
-                    return typeMappingTable[originalTypeName];
-            }
-            return null;
+			string typeName = GetTypeMappingName(type);
+
+			TypeMapping mapping = null;
+			typeMappingTable.TryGetValue(typeName, out mapping);
+
+			return mapping;
         }
+
+		string GetTypeMappingName(TypeReference type)
+		{
+			if (type == null)
+				throw new ArgumentNullException("type");
+
+			// Deobfuscate if mapped
+			if (obfuscatedToOriginalMapping.ContainsKey(type.Name))
+				return obfuscatedToOriginalMapping[type.Name];
+
+			// Not nested and not obfuscated so return the easy case.
+			// Note that only non-nested types have a populated namespace.
+			if (!type.IsNested)
+				return type.Namespace + "." + type.Name;
+
+			// The type is nested
+			return GetTypeMappingName(type.DeclaringType) + "/" + type.Name;
+		}
     }
 }
