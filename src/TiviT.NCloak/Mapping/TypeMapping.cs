@@ -247,7 +247,7 @@ namespace TiviT.NCloak.Mapping
 			return key;
 		}
 
-		public static void MethodSignatureFullName(IMethodSignature self, StringBuilder builder)
+		public static void MethodSignatureFullName(MethodReference self, StringBuilder builder)
 		{
 			builder.Append("(");
 			if (self.HasParameters)
@@ -268,7 +268,10 @@ namespace TiviT.NCloak.Mapping
 					// builder.Append(parameterDefinition.ParameterType.FullName.Replace("!!0", "T"));
 					//
 					// Use param name instead of type to workaround generics type changes.
-					builder.Append(parameterDefinition.Name);
+					if (self.HasGenericParameters || self.IsGenericInstance)
+						builder.Append(parameterDefinition.Name);
+					else
+						builder.Append(parameterDefinition.ParameterType.FullName);
 				}
 			}
 			builder.Append(")");
