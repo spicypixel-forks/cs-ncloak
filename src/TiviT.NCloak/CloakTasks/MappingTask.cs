@@ -38,26 +38,24 @@ namespace TiviT.NCloak.CloakTasks
 
 		static bool ShouldObfuscate(ICloakContext context, TypeDefinition typeDefinition)
 		{
+			// This method operates only on types in the current module
 			string assemblyName;
 			if (typeDefinition.Scope is ModuleDefinition)
 				assemblyName = ((ModuleDefinition)typeDefinition.Scope).Assembly.Name.FullName;
-			else if (typeDefinition.Scope is AssemblyNameReference)
-				assemblyName = ((AssemblyNameReference)typeDefinition.Scope).FullName;
-			else {
+			else 
 				throw new InvalidOperationException("Unknown scope: " + typeDefinition.Scope);
-			}
 
 			//Check if this needs to be updated
 			if (!context.MappingGraph.IsAssemblyMappingDefined(assemblyName))
 				return false;
 
+			// Do not obfuscate system types like "<Module>"
+			if (typeDefinition.Name.StartsWith("<") || typeDefinition.Name.StartsWith("$"))
+				return false;
+
 			// Non-nested types are either public or assembly
 			if (!typeDefinition.IsNested) 
 			{
-				// Do not obfuscate system types like "<Module>"
-				if (typeDefinition.Name.StartsWith("<"))
-					return false;
-
 				// Return whether to obfuscate all
 				if (context.Settings.ObfuscateAllModifiers)
 					return true;
@@ -103,17 +101,19 @@ namespace TiviT.NCloak.CloakTasks
 			if (declaringType == null)
 				declaringType = memberDefinition.DeclaringType;
 
+			// This method operates only on types in the current module
 			string assemblyName;
 			if (declaringType.Scope is ModuleDefinition)
 				assemblyName = ((ModuleDefinition)declaringType.Scope).Assembly.Name.FullName;
-			else if (declaringType.Scope is AssemblyNameReference)
-				assemblyName = ((AssemblyNameReference)declaringType.Scope).FullName;
-			else {
+			else
 				throw new InvalidOperationException("Unknown scope: " + declaringType.Scope);
-			}
 
 			//Check if this needs to be updated
 			if (!context.MappingGraph.IsAssemblyMappingDefined(assemblyName))
+				return false;
+
+			// Do not obfuscate system types like "<Module>"
+			if (declaringType.Name.StartsWith("<") || declaringType.Name.StartsWith("$"))
 				return false;
 
 			bool shouldObfuscateDeclaringType = ShouldObfuscate(context, declaringType);
@@ -142,6 +142,15 @@ namespace TiviT.NCloak.CloakTasks
 
 			var method = memberDefinition as MethodDefinition;
 			if (method != null) {
+				// Constructors don't need to be obfuscated
+				if (method.IsConstructor)
+					return false;
+
+				//Generic types are causing problems
+				//Some members don't resolve
+				if (method.HasGenericParameters)
+					return false;
+
 				// Handle explicit interface methods
 				if (IsExplicitlyImplemented(method)) {
 					TypeReference iface;
@@ -151,21 +160,12 @@ namespace TiviT.NCloak.CloakTasks
 					return ShouldObfuscate(context, ifaceMethod.Resolve());
 				}
 
-				// Handle implicit interface methods and overloads
-				foreach (var iface in declaringType.Interfaces) {
-					var ifaceMethod = iface.Resolve().Methods.FindMethod(method.Name, method.Parameters);
-					if (ifaceMethod != null) {
-						return ShouldObfuscate(context, ifaceMethod);
-					}
-				}
-
-				// Handle virtual methods
+				// Handle virtual and implicit interface methods
 				if(method.IsVirtual)
 				{
 					var baseMethod = FindBaseMethodDeclaration(declaringType, method);
-					if (baseMethod != null) {
+					if (baseMethod != null)
 						return ShouldObfuscate(context, baseMethod);
-					}
 				}
 
 				// Do not obfuscate delegate methods
@@ -215,7 +215,7 @@ namespace TiviT.NCloak.CloakTasks
 		} 
 
 		public static void GetInfoForExplicitlyImplementedMethod ( 
-		                                                          MethodDefinition method, out TypeReference iface, out MethodReference ifaceMethod) 
+		    MethodDefinition method, out TypeReference iface, out MethodReference ifaceMethod) 
 		{ 
 			iface = null; 
 			ifaceMethod = null; 
@@ -278,15 +278,6 @@ namespace TiviT.NCloak.CloakTasks
                         if (typeMapping.HasMethodBeenObfuscated(methodDefinition.Name))
                             continue;
 
-                        //We won't do constructors - causes issues
-                        if (methodDefinition.IsConstructor)
-                            continue;
-
-						//Generic types are causing problems
-						//Some members don't resolve
-						if (methodDefinition.HasGenericParameters)
-							continue;
-
 						if (!ShouldObfuscate(context, methodDefinition))
 							continue;
 
@@ -306,8 +297,9 @@ namespace TiviT.NCloak.CloakTasks
                                     if (baseTypeMapping != null)
                                     {
                                         //We found the type mapping - look up the name it uses for this method and use that
-                                        if (baseTypeMapping.HasMethodMapping(methodDefinition))
+                                        if (baseTypeMapping.HasMethodMapping(methodDefinition)) {
                                             typeMapping.AddMethodMapping(methodDefinition, baseTypeMapping.GetObfuscatedMethodName(methodDefinition));
+										}
                                         else
                                         {
                                             //That's strange... we shouldn't get into here - but if we ever do then
@@ -349,8 +341,9 @@ namespace TiviT.NCloak.CloakTasks
                                                          nameManager.GenerateName(NamingTable.Method));
 							}
                         }
-						else
+						else {
                             typeMapping.AddMethodMapping(methodDefinition, nameManager.GenerateName(NamingTable.Method));
+						}
                     }
 
                     //Properties
