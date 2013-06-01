@@ -31,7 +31,7 @@ namespace TiviT.NCloak
             this.settings = settings;
 
             //Create the name manager
-            nameManager = new NameManager();
+            nameManager = new NameManager(settings.UseAlphaCharacterSet);
 
             //Create the mapping graph
             mappingGraph = new MappingGraph();

@@ -85,6 +85,11 @@ namespace TiviT.NCloak
             get; set;
         }
 
+		public bool UseAlphaCharacterSet
+		{
+			get; set;
+		}
+
         /// <summary>
         /// Gets or sets the method used to confuse decompilation tools.
         /// </summary>

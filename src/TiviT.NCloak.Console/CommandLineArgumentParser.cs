@@ -76,6 +76,10 @@ namespace TiviT.NCloak.Console
 							settings.ObfuscateInternalModifiers = true;
 							break;
 
+						case "alphacharset":
+							settings.UseAlphaCharacterSet = true;
+							break;
+
                         case "norename":
                             //Used for debugging purposes
                             settings.NoRename = true;

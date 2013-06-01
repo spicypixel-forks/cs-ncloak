@@ -5,7 +5,8 @@ namespace TiviT.NCloak
     public class NameManager
     {
         private readonly Dictionary<NamingTable, CharacterSet> namingTables;
-        
+		private readonly bool useAlphaCharacterSet = false;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="NameManager"/> class.
         /// </summary>
@@ -13,6 +14,11 @@ namespace TiviT.NCloak
         {
             namingTables = new Dictionary<NamingTable, CharacterSet>();
         }
+
+		public NameManager(bool useAlphaCharacterSet) : this()
+		{
+			this.useAlphaCharacterSet = useAlphaCharacterSet;
+		}
 
         /// <summary>
         /// Sets the start character.
@@ -36,12 +42,18 @@ namespace TiviT.NCloak
         {
             //Check the naming table exists
             if (!namingTables.ContainsKey(table))
-                SetCharacterSet(table, DefaultCharacterSet);
+				SetCharacterSet(table, useAlphaCharacterSet ? AlphaCharacterSet : DefaultCharacterSet);
 
             //Generate a new name
+			string result = namingTables[table].Generate();
             if (table == NamingTable.Field) //For fields append an _ to make sure it differs from properties etc
-                return "_" + namingTables[table].Generate();
-            return namingTables[table].Generate();
+                result = "_" + result;
+
+			// Add more entropy to avoid collisions
+			if (useAlphaCharacterSet)
+				result = "_prv_" + result;
+
+			return result;
         }
 
         /// <summary>
@@ -52,5 +64,10 @@ namespace TiviT.NCloak
         {
             get { return new CharacterSet('\u0800', '\u08ff'); }
         }
+
+		private static CharacterSet AlphaCharacterSet
+		{
+			get { return new CharacterSet('a', 'z'); }
+		}
     }
 }
